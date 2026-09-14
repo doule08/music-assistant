@@ -1,0 +1,20 @@
+# environment variables
+.env
+.env.*
+!.env.example
+
+# python
+**/.venv/
+**/__pycache__/
+**/*.pyc
+
+# js
+node_modules/
+dist/
+
+# .net
+**/bin/
+**/obj/
+
+# global
+.vscode/

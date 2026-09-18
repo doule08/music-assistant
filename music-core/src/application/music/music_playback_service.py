@@ -1,4 +1,5 @@
 from infrastructure.http.http_client_factory import AsyncHttpClientFactory
+import urllib.parse
 
 
 class MusicPlaybackService:
@@ -18,8 +19,32 @@ class MusicPlaybackService:
             raise
 
     async def play(self, track_url: str):
-        # play the track with the playback service
-        pass
+
+        try:
+            # response = await self.client.get(
+            #     "/httpapi.asp",
+            #     params={"command": f"setPlayerCmd:play:{track_url}"},
+            # )
+
+            request = self.client.build_request(
+                "GET",
+                "/httpapi.asp",
+                params={"command": f"setPlayerCmd:play:{track_url}"},
+            )
+
+            # urllib.parse.urlencode(request.url.params)
+            print("REQUEST URL:", request.url)
+            print("REQUEST HEADERS:", request.headers)
+
+            response = await self.client.send(request)
+
+            response.raise_for_status()
+
+            print(response.json())
+
+        except Exception as e:
+            print("WIIM ERROR:", type(e).__name__, str(e))
+            raise
 
     async def pause(self):
         # pause the playback service

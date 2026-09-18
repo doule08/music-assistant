@@ -11,7 +11,10 @@ async def get_status(service: MusicService = Depends(get_music_service)):
 
 
 @router.post("/play")
-async def play(query: str, service: MusicService = Depends(get_music_service)):
+async def play(
+    query: str | None = None, service: MusicService = Depends(get_music_service)
+):
+    query = "TEMP EMPTY QUERY"
     return await service.play(query)
 
 

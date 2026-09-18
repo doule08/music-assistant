@@ -30,5 +30,4 @@ class MusicSearchService:
             raise
 
     async def search(self, query: str) -> str:
-        # search for music with the search service
-        return ""
+        return "http://192.168.1.50:8200/MediaItems/380470.flac"

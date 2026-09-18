@@ -1,7 +1,6 @@
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from dotenv import load_dotenv
 import uvicorn
 
 from api.music_controller import router as music_router
@@ -14,16 +13,14 @@ async def lifespan(app: FastAPI):
 
     await http_client_factory.start()
 
+    # Store the http_client_factory in the app state so it can be accessed in the dependencies
     app.state.http_client_factory = http_client_factory
 
     try:
+        # Yield control back to the FastAPI application to handle requests
         yield
     finally:
         await http_client_factory.close()
-
-
-env_path = Path(__file__).resolve().parent.parent / ".env"
-load_dotenv(dotenv_path=env_path, override=True)
 
 
 app = FastAPI(lifespan=lifespan)

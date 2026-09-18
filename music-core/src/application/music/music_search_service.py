@@ -12,7 +12,12 @@ class MusicSearchService:
         self.client_factory = client_factory
 
     async def get_status(self):
-        self.client_factory.
+        client = self.client_factory.get("dlna")
+
+        response = await client.get("/rootDesc.xml")
+
+        # self.client_factory.
+        return response.status_code
 
     async def search(self, query: str) -> str:
         # search for music with the search service

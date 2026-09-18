@@ -1,8 +1,4 @@
-from application.common.constants import (
-    DLNA_URL,
-    NAVIDROME_URL,
-    WIIM_URL,
-)
+from config.settings import settings
 
 from infrastructure.http.http_client_factory import (
     AsyncHttpClientFactory,
@@ -15,19 +11,19 @@ def create_http_client_factory() -> AsyncHttpClientFactory:
         {
             "dlna": ServerConfig(
                 name="dlna",
-                base_url=DLNA_URL,
+                base_url=settings.dlna_url,
                 timeout=10.0,
                 headers={"Accept": "application/json"},
             ),
             "navidrome": ServerConfig(
                 name="navidrome",
-                base_url=NAVIDROME_URL,
+                base_url=settings.navidrome_url,
                 timeout=10.0,
                 headers={"Accept": "application/json"},
             ),
             "wiim": ServerConfig(
                 name="wiim",
-                base_url=WIIM_URL,
+                base_url=settings.wiim_url,
                 timeout=10.0,
                 headers={"Accept": "application/json"},
             ),

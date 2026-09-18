@@ -15,7 +15,10 @@ class MusicService:
         pass
 
     async def get_status(self):
+        print(" get_status service ??")
         search_status = await self.search_service.get_status()
+
+        return search_status
         playback_status = await self.playback_service.get_status()
 
         return {"search_status": search_status, "playback_status": playback_status}

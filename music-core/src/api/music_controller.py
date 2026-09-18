@@ -10,26 +10,26 @@ async def get_status(service: MusicService = Depends(get_music_service)):
     return await service.get_status()
 
 
-@router.get("/play/{track_id}")
-async def play(track_id: str, service: MusicService = Depends(get_music_service)):
-    return await service.play(track_id)
+@router.post("/play")
+async def play(query: str, service: MusicService = Depends(get_music_service)):
+    return await service.play(query)
 
 
-@router.get("/pause")
+@router.post("/pause")
 async def pause(service: MusicService = Depends(get_music_service)):
     return await service.pause()
 
 
-@router.get("/stop")
+@router.post("/stop")
 async def stop():
     return {"message": "Playback stopped"}
 
 
-@router.get("/resume")
+@router.post("/resume")
 async def resume():
     return {"message": "Playback resumed"}
 
 
-@router.get("/next")
+@router.post("/next")
 async def next():
     return {"message": "Playing next track"}

@@ -1,13 +1,11 @@
+from application.common.command_result import CommandResult, MusicCommand
+from application.common.errors import TrackNotFoundError
 from application.music.music_playback_service import MusicPlaybackService
 from application.music.music_search_service import MusicSearchService
 from infrastructure.http.http_client_factory import AsyncHttpClientFactory, ServerConfig
 
 
 class MusicService:
-
-    # TODO : Will need two service :
-    # 1 One to search the music with a mini DLNA server (later with a navidrome server)
-    # 2 One to control the playback with my Wiim AMp Pro
 
     def __init__(
         self, search_service: MusicSearchService, playback_service: MusicPlaybackService
@@ -16,35 +14,59 @@ class MusicService:
         self.playback_service = playback_service
         pass
 
-    # TODO
     async def get_status(self):
-        # get status of search service and playback service
-        pass
+        search_status = await self.search_service.get_status()
+        playback_status = await self.playback_service.get_status()
 
-    async def play(self, track_id: str):
-        # search for the track with the search service and play it with the playback service
-        pass
+        return {"search_status": search_status, "playback_status": playback_status}
+
+    async def play(self, query: str):
+        track_url = await self.search_service.search(query)
+
+        if not track_url:
+            raise TrackNotFoundError(query)
+
+        await self.playback_service.play(track_url)
+
+        return CommandResult(
+            command=MusicCommand.PLAY,
+            success=True,
+            data={"query": query},
+        )
 
     async def pause(self):
-        # pause the playback service
-        pass
+        return CommandResult(
+            command=MusicCommand.PAUSE,
+            success=True,
+        )
 
     async def resume(self):
-        # resume the playback service
-        pass
+        return CommandResult(
+            command=MusicCommand.RESUME,
+            success=True,
+        )
 
     async def stop(self):
-        # stop the playback service
-        pass
+        return CommandResult(
+            command=MusicCommand.STOP,
+            success=True,
+        )
 
     async def next(self):
-        # play the next track with the playback service
-        pass
+        return CommandResult(
+            command=MusicCommand.NEXT,
+            success=True,
+        )
 
     async def previous(self):
-        # play the previous track with the playback service
-        pass
+        return CommandResult(
+            command=MusicCommand.PREVIOUS,
+            success=True,
+        )
 
     async def set_volume(self, volume: int):
-        # set the volume of the playback service
-        pass
+        return CommandResult(
+            command=MusicCommand.SET_VOLUME,
+            success=True,
+            data={"volume": volume},
+        )

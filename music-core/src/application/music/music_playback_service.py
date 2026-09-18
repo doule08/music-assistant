@@ -5,34 +5,34 @@ class MusicPlaybackService:
     def __init__(self, http_client_factory: AsyncHttpClientFactory):
         self.client_factory = http_client_factory
 
-    def get_status(self):
+    async def get_status(self):
         # get status of playback service
         pass
 
-    def play(self, track_id: str):
+    async def play(self, track_url: str):
         # play the track with the playback service
         pass
 
-    def pause(self):
+    async def pause(self):
         # pause the playback service
         pass
 
-    def resume(self):
+    async def resume(self):
         # resume the playback service
         pass
 
-    def stop(self):
+    async def stop(self):
         # stop the playback service
         pass
 
-    def next(self):
+    async def next(self):
         # play the next track with the playback service
         pass
 
-    def previous(self):
+    async def previous(self):
         # play the previous track with the playback service
         pass
 
-    def set_volume(self, volume: int):
+    async def set_volume(self, volume: int):
         # set the volume of the playback service
         pass

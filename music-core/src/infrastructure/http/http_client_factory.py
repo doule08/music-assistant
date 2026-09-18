@@ -1,12 +1,9 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import Mapping
 
 import httpx
 
 
-# frozen dataclass to make it immutable and hashable, allowing it to be used as a key in dictionaries
 @dataclass(frozen=True)
 class ServerConfig:
     name: str
@@ -19,33 +16,40 @@ class ServerConfig:
 
 
 class AsyncHttpClientFactory:
-    """Async variant for FastAPI / async endpoints."""
 
-    def __init__(self, servers: Mapping[str, ServerConfig] | None = None) -> None:
-        self._servers: dict[str, ServerConfig] = dict(servers or {})
+    def __init__(self, servers: Mapping[str, ServerConfig]) -> None:
+        self._servers = dict(servers)
+        self._clients: dict[str, httpx.AsyncClient] = {}
 
-    # Register a new server configuration
-    def register(self, name: str, config: ServerConfig) -> None:
-        self._servers[name] = config
-
-    # Get an async client for a given server name
-    def get(self, name: str) -> httpx.AsyncClient:
-        if name not in self._servers:
-            raise KeyError(
-                f"Unknown server '{name}'. Available: {sorted(self._servers)}"
+    async def start(self) -> None:
+        for name, config in self._servers.items():
+            self._clients[name] = httpx.AsyncClient(
+                base_url=self._normalize_base_url(config.base_url),
+                timeout=config.timeout,
+                headers=httpx.Headers(config.headers),
+                verify=config.verify_ssl,
+                follow_redirects=config.follow_redirects,
+                params=config.default_params,
             )
 
-        config = self._servers[name]
+    def get(self, name: str) -> httpx.AsyncClient:
+        if name not in self._clients:
+            raise KeyError(
+                f"Unknown HTTP client '{name}'. " f"Available: {sorted(self._clients)}"
+            )
 
-        return httpx.AsyncClient(
-            base_url=self._normalize_base_url(config.base_url),
-            timeout=config.timeout,
-            headers=httpx.Headers(config.headers),
-            verify=config.verify_ssl,
-            follow_redirects=config.follow_redirects,
-        )
+        return self._clients[name]
+
+    async def close(self) -> None:
+        await self._close_clients()
+
+    async def _close_clients(self) -> None:
+        clients = list(self._clients.values())
+        self._clients.clear()
+
+        for client in clients:
+            await client.aclose()
 
     @staticmethod
     def _normalize_base_url(base_url: str) -> str:
-        cleaned = base_url.rstrip("/")
-        return f"{cleaned}/"
+        return f"{base_url.rstrip('/')}/"

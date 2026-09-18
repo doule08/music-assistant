@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+from fastapi import APIRouter, Depends, Query
 from application.music.music_service import MusicService
 from application.music.music_dependencies import get_music_service
 
@@ -24,15 +25,25 @@ async def pause(service: MusicService = Depends(get_music_service)):
 
 
 @router.post("/stop")
-async def stop():
-    return {"message": "Playback stopped"}
+async def stop(service: MusicService = Depends(get_music_service)):
+    return await service.stop()
 
 
 @router.post("/resume")
-async def resume():
-    return {"message": "Playback resumed"}
+async def resume(service: MusicService = Depends(get_music_service)):
+    return await service.resume()
 
 
 @router.post("/next")
-async def next():
-    return {"message": "Playing next track"}
+async def next(service: MusicService = Depends(get_music_service)):
+    return await service.next()
+
+
+@router.post("/volume")
+async def set_volume(
+    volume: Annotated[
+        int, Query(ge=0, le=100, description="Volume level from 0 to 100")
+    ],
+    service: MusicService = Depends(get_music_service),
+):
+    return await service.set_volume(volume)

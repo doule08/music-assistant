@@ -1,84 +1,85 @@
+from enum import Enum
+
 from infrastructure.http.http_client_factory import AsyncHttpClientFactory
 
 
+class PlayerStatus(Enum):
+    PAUSE = "pause"
+    PLAY = "play"
+    STOP = "stop"
+
+
 class MusicPlaybackService:
+    COMMANDS = {
+        "server_status": "getStatusEx",
+        "player_status": "getPlayerStatus",
+        "pause": "setPlayerCmd:pause",
+        "resume": "setPlayerCmd:resume",
+        "stop": "setPlayerCmd:stop",
+        "next": "setPlayerCmd:next",
+        "previous": "setPlayerCmd:prev",
+    }
+
     def __init__(self, http_client_factory: AsyncHttpClientFactory):
         self.client = http_client_factory.get("wiim")
 
+    async def _command(self, command: str):
+        try:
+            response = await self.client.get(
+                "/httpapi.asp",
+                params={"command": command},
+            )
+
+            response.raise_for_status()
+
+            return response
+
+        except Exception as e:
+            print("WIIM ERROR:", type(e).__name__, str(e))
+            raise
+
     async def get_server_status(self):
-        try:
-            response = await self.client.get(
-                "/httpapi.asp",
-                params={"command": "getStatusEx"},
-            )
+        response = await self._command(self.COMMANDS["server_status"])
+        return response.json()
 
-            return response.status_code
-        except Exception as e:
-            print("WIIM ERROR:", type(e).__name__, str(e))
-            raise
+    async def get_player_status(self) -> PlayerStatus:
+        response = await self._command(self.COMMANDS["player_status"])
+        return PlayerStatus(response.json()["status"])
 
-    async def get_player_status(self):
-        try:
-            response = await self.client.get(
-                "/httpapi.asp",
-                params={"command": "getPlayerStatus"},
-            )
+    async def play(self, track_url: str) -> bool:
+        await self._command(f"setPlayerCmd:play:{track_url}")
+        return True
 
-            response.raise_for_status()
+    async def pause(self) -> bool:
+        status = await self.get_player_status()
 
-            return response.json()
-        except Exception as e:
-            print("WIIM ERROR:", type(e).__name__, str(e))
-            raise
+        if status != PlayerStatus.PLAY:
+            return False
 
-    async def play(self, track_url: str):
+        await self._command(self.COMMANDS["pause"])
+        return True
 
-        try:
-            # response = await self.client.get(
-            #     "/httpapi.asp",
-            #     params={"command": f"setPlayerCmd:play:{track_url}"},
-            # )
+    async def resume(self) -> bool:
+        status = await self.get_player_status()
 
-            request = self.client.build_request(
-                "GET",
-                "/httpapi.asp",
-                params={"command": f"setPlayerCmd:play:{track_url}"},
-            )
+        if status != PlayerStatus.PAUSE:
+            return False
 
-            # urllib.parse.urlencode(request.url.params)
-            print("REQUEST URL:", request.url)
-            print("REQUEST HEADERS:", request.headers)
+        await self._command(self.COMMANDS["resume"])
+        return True
 
-            response = await self.client.send(request)
+    async def stop(self) -> bool:
+        await self._command(self.COMMANDS["stop"])
+        return True
 
-            response.raise_for_status()
+    async def next(self) -> bool:
+        await self._command(self.COMMANDS["next"])
+        return True
 
-            print(response.json())
+    async def previous(self) -> bool:
+        await self._command(self.COMMANDS["previous"])
+        return True
 
-        except Exception as e:
-            print("WIIM ERROR:", type(e).__name__, str(e))
-            raise
-
-    async def pause(self):
-        # pause the playback service
-        pass
-
-    async def resume(self):
-        # resume the playback service
-        pass
-
-    async def stop(self):
-        # stop the playback service
-        pass
-
-    async def next(self):
-        # play the next track with the playback service
-        pass
-
-    async def previous(self):
-        # play the previous track with the playback service
-        pass
-
-    async def set_volume(self, volume: int):
-        # set the volume of the playback service
-        pass
+    async def set_volume(self, volume: int) -> bool:
+        await self._command(f"setPlayerCmd:vol:{volume}")
+        return True

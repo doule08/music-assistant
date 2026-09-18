@@ -1,5 +1,6 @@
 import asyncio
 from types import SimpleNamespace
+from typing import Any, cast
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -23,6 +24,14 @@ class FakeResponse:
 
     def json(self):
         return self._payload
+
+
+def make_http_factory(client):
+    return cast(AsyncHttpClientFactory, SimpleNamespace(get=lambda _name: client))
+
+
+def make_mock_client() -> Any:
+    return cast(Any, Mock())
 
 
 def test_http_client_factory_starts_and_gets_client():
@@ -77,38 +86,40 @@ def test_http_client_factory_close_clears_clients():
 
 
 def test_music_search_service_get_server_status_returns_status_code():
-    fake_client = Mock()
+    fake_client = make_mock_client()
     fake_client.build_request.return_value = SimpleNamespace(
         url="http://example.test/rootDesc.xml",
         headers={"Accept": "application/json"},
     )
-    fake_client.send = AsyncMock(return_value=SimpleNamespace(status_code=204))
+    mock_send = AsyncMock(return_value=SimpleNamespace(status_code=204))
+    fake_client.send = mock_send
 
-    service = MusicSearchService(SimpleNamespace(get=lambda name: fake_client))
+    service = MusicSearchService(make_http_factory(fake_client))
 
     result = asyncio.run(service.get_server_status())
 
     assert result == 204
-    fake_client.send.assert_awaited_once()
+    mock_send.assert_awaited_once()
 
 
 def test_music_search_service_get_server_status_raises_on_error():
-    fake_client = Mock()
+    fake_client = make_mock_client()
     fake_client.build_request.return_value = SimpleNamespace(
         url="http://example.test/rootDesc.xml",
         headers={"Accept": "application/json"},
     )
-    fake_client.send = AsyncMock(side_effect=RuntimeError("boom"))
+    mock_send = AsyncMock(side_effect=RuntimeError("boom"))
+    fake_client.send = mock_send
 
-    service = MusicSearchService(SimpleNamespace(get=lambda name: fake_client))
+    service = MusicSearchService(make_http_factory(fake_client))
 
     with pytest.raises(RuntimeError, match="boom"):
         asyncio.run(service.get_server_status())
 
 
 def test_music_search_service_search_returns_track_url():
-    fake_client = Mock()
-    service = MusicSearchService(SimpleNamespace(get=lambda name: fake_client))
+    fake_client = make_mock_client()
+    service = MusicSearchService(make_http_factory(fake_client))
 
     result = asyncio.run(service.search("queen"))
 
@@ -116,22 +127,23 @@ def test_music_search_service_search_returns_track_url():
 
 
 def test_music_playback_service_command_calls_http_api_correctly():
-    fake_client = Mock()
-    fake_client.get = AsyncMock(return_value=FakeResponse())
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    fake_client = make_mock_client()
+    mock_get = AsyncMock(return_value=FakeResponse())
+    fake_client.get = mock_get
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     asyncio.run(service._command("setPlayerCmd:pause"))
 
-    fake_client.get.assert_awaited_once_with(
+    mock_get.assert_awaited_once_with(
         "/httpapi.asp",
         params={"command": "setPlayerCmd:pause"},
     )
 
 
 def test_music_playback_service_get_server_status_parses_response():
-    fake_client = Mock()
+    fake_client = make_mock_client()
     fake_client.get = AsyncMock(return_value=FakeResponse({"status": "ok"}))
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     response = asyncio.run(service.get_server_status())
 
@@ -139,9 +151,11 @@ def test_music_playback_service_get_server_status_parses_response():
 
 
 def test_music_playback_service_get_player_status_returns_enum():
-    fake_client = Mock()
-    fake_client.get = AsyncMock(return_value=FakeResponse({"status": PlayerStatus.PLAY.value}))
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    fake_client = make_mock_client()
+    fake_client.get = AsyncMock(
+        return_value=FakeResponse({"status": PlayerStatus.PLAY.value})
+    )
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     result = asyncio.run(service.get_player_status())
 
@@ -149,23 +163,26 @@ def test_music_playback_service_get_player_status_returns_enum():
 
 
 def test_music_playback_service_play_returns_true():
-    fake_client = Mock()
-    fake_client.get = AsyncMock(return_value=FakeResponse())
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    fake_client = make_mock_client()
+    mock_get = AsyncMock(return_value=FakeResponse())
+    fake_client.get = mock_get
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     result = asyncio.run(service.play("http://example.test/track.mp3"))
 
     assert result is True
-    fake_client.get.assert_awaited_once_with(
+    mock_get.assert_awaited_once_with(
         "/httpapi.asp",
         params={"command": "setPlayerCmd:play:http://example.test/track.mp3"},
     )
 
 
 def test_music_playback_service_pause_returns_false_when_not_playing():
-    fake_client = Mock()
-    fake_client.get = AsyncMock(return_value=FakeResponse({"status": PlayerStatus.PAUSE.value}))
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    fake_client = make_mock_client()
+    fake_client.get = AsyncMock(
+        return_value=FakeResponse({"status": PlayerStatus.PAUSE.value})
+    )
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     result = asyncio.run(service.pause())
 
@@ -174,14 +191,14 @@ def test_music_playback_service_pause_returns_false_when_not_playing():
 
 
 def test_music_playback_service_pause_returns_true_when_playing():
-    fake_client = Mock()
+    fake_client = make_mock_client()
     fake_client.get = AsyncMock(
         side_effect=[
             FakeResponse({"status": PlayerStatus.PLAY.value}),
             FakeResponse(),
         ]
     )
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     result = asyncio.run(service.pause())
 
@@ -190,9 +207,11 @@ def test_music_playback_service_pause_returns_true_when_playing():
 
 
 def test_music_playback_service_resume_returns_false_when_not_paused():
-    fake_client = Mock()
-    fake_client.get = AsyncMock(return_value=FakeResponse({"status": PlayerStatus.PLAY.value}))
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    fake_client = make_mock_client()
+    fake_client.get = AsyncMock(
+        return_value=FakeResponse({"status": PlayerStatus.PLAY.value})
+    )
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     result = asyncio.run(service.resume())
 
@@ -201,14 +220,14 @@ def test_music_playback_service_resume_returns_false_when_not_paused():
 
 
 def test_music_playback_service_resume_returns_true_when_paused():
-    fake_client = Mock()
+    fake_client = make_mock_client()
     fake_client.get = AsyncMock(
         side_effect=[
             FakeResponse({"status": PlayerStatus.PAUSE.value}),
             FakeResponse(),
         ]
     )
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     result = asyncio.run(service.resume())
 
@@ -217,9 +236,9 @@ def test_music_playback_service_resume_returns_true_when_paused():
 
 
 def test_music_playback_service_stop_next_previous_and_volume_return_true():
-    fake_client = Mock()
+    fake_client = make_mock_client()
     fake_client.get = AsyncMock(return_value=FakeResponse())
-    service = MusicPlaybackService(SimpleNamespace(get=lambda name: fake_client))
+    service = MusicPlaybackService(make_http_factory(fake_client))
 
     assert asyncio.run(service.stop()) is True
     assert asyncio.run(service.next()) is True
@@ -230,8 +249,14 @@ def test_music_playback_service_stop_next_previous_and_volume_return_true():
 
 def test_music_service_get_status_aggregates_server_statuses():
     service = MusicService(
-        search_service=SimpleNamespace(get_server_status=AsyncMock(return_value=200)),
-        playback_service=SimpleNamespace(get_server_status=AsyncMock(return_value=204)),
+        search_service=cast(
+            MusicSearchService,
+            SimpleNamespace(get_server_status=AsyncMock(return_value=200)),
+        ),
+        playback_service=cast(
+            MusicPlaybackService,
+            SimpleNamespace(get_server_status=AsyncMock(return_value=204)),
+        ),
     )
 
     result = asyncio.run(service.get_status())
@@ -240,8 +265,16 @@ def test_music_service_get_status_aggregates_server_statuses():
 
 
 def test_music_service_play_returns_command_result_when_track_found():
-    search_service = SimpleNamespace(search=AsyncMock(return_value="http://example.test/track.mp3"))
-    playback_service = SimpleNamespace(play=AsyncMock(return_value=True))
+    mock_search = AsyncMock(return_value="http://example.test/track.mp3")
+    mock_play = AsyncMock(return_value=True)
+    search_service = cast(
+        MusicSearchService,
+        SimpleNamespace(search=mock_search),
+    )
+    playback_service = cast(
+        MusicPlaybackService,
+        SimpleNamespace(play=mock_play),
+    )
     service = MusicService(search_service, playback_service)
 
     result = asyncio.run(service.play("queen"))
@@ -249,18 +282,26 @@ def test_music_service_play_returns_command_result_when_track_found():
     assert result.command == MusicCommand.PLAY
     assert result.success is True
     assert result.data == {"query": "queen"}
-    playback_service.play.assert_awaited_once_with("http://example.test/track.mp3")
+    mock_play.assert_awaited_once_with("http://example.test/track.mp3")
 
 
 def test_music_service_play_raises_when_track_not_found():
-    search_service = SimpleNamespace(search=AsyncMock(return_value=""))
-    playback_service = SimpleNamespace(play=AsyncMock(return_value=True))
+    mock_search = AsyncMock(return_value="")
+    mock_play = AsyncMock(return_value=True)
+    search_service = cast(
+        MusicSearchService,
+        SimpleNamespace(search=mock_search),
+    )
+    playback_service = cast(
+        MusicPlaybackService,
+        SimpleNamespace(play=mock_play),
+    )
     service = MusicService(search_service, playback_service)
 
     with pytest.raises(TrackNotFoundError, match="Track not found: missing"):
         asyncio.run(service.play("missing"))
 
-    playback_service.play.assert_not_called()
+    mock_play.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -273,12 +314,19 @@ def test_music_service_play_raises_when_track_not_found():
         ("previous", MusicCommand.PREVIOUS),
     ],
 )
-def test_music_service_command_wrappers_return_command_result(method_name, expected_command):
-    playback_service = SimpleNamespace()
+def test_music_service_command_wrappers_return_command_result(
+    method_name, expected_command
+):
+    playback_service = cast(
+        MusicPlaybackService,
+        SimpleNamespace(),
+    )
     for command_name in ["pause", "resume", "stop", "next", "previous"]:
         setattr(playback_service, command_name, AsyncMock(return_value=True))
 
-    service = MusicService(SimpleNamespace(), playback_service)
+    service = MusicService(
+        cast(MusicSearchService, SimpleNamespace()), playback_service
+    )
 
     result = asyncio.run(getattr(service, method_name)())
 
@@ -288,12 +336,18 @@ def test_music_service_command_wrappers_return_command_result(method_name, expec
 
 
 def test_music_service_set_volume_returns_command_result():
-    playback_service = SimpleNamespace(set_volume=AsyncMock(return_value=True))
-    service = MusicService(SimpleNamespace(), playback_service)
+    mock_set_volume = AsyncMock(return_value=True)
+    playback_service = cast(
+        MusicPlaybackService,
+        SimpleNamespace(set_volume=mock_set_volume),
+    )
+    service = MusicService(
+        cast(MusicSearchService, SimpleNamespace()), playback_service
+    )
 
     result = asyncio.run(service.set_volume(55))
 
     assert result.command == MusicCommand.SET_VOLUME
     assert result.success is True
     assert result.data == {"volume": 55}
-    playback_service.set_volume.assert_awaited_once_with(55)
+    mock_set_volume.assert_awaited_once_with(55)

@@ -11,7 +11,7 @@ class MusicSearchService:
     def __init__(self, client_factory: AsyncHttpClientFactory):
         self.client = client_factory.get("dlna")
 
-    async def get_status(self):
+    async def get_server_status(self):
         try:
             request = self.client.build_request("GET", "/rootDesc.xml")
 

@@ -1,12 +1,11 @@
 from infrastructure.http.http_client_factory import AsyncHttpClientFactory
-import urllib.parse
 
 
 class MusicPlaybackService:
     def __init__(self, http_client_factory: AsyncHttpClientFactory):
         self.client = http_client_factory.get("wiim")
 
-    async def get_status(self):
+    async def get_server_status(self):
         try:
             response = await self.client.get(
                 "/httpapi.asp",
@@ -14,6 +13,20 @@ class MusicPlaybackService:
             )
 
             return response.status_code
+        except Exception as e:
+            print("WIIM ERROR:", type(e).__name__, str(e))
+            raise
+
+    async def get_player_status(self):
+        try:
+            response = await self.client.get(
+                "/httpapi.asp",
+                params={"command": "getPlayerStatus"},
+            )
+
+            response.raise_for_status()
+
+            return response.json()
         except Exception as e:
             print("WIIM ERROR:", type(e).__name__, str(e))
             raise

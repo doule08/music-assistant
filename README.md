@@ -21,3 +21,8 @@ http://SERVER-URL:8200/ctl/ContentDir
 ## Launch script
 
      uv run path/to/main.py
+
+## Run tests
+
+     uv run pytest -q
+

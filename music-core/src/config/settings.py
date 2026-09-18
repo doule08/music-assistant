@@ -4,9 +4,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
 
 
-print("env_path:", env_path)
-
-
 class Settings(BaseSettings):
     dlna_url: str
     navidrome_url: str

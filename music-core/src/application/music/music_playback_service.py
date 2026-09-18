@@ -3,11 +3,19 @@ from infrastructure.http.http_client_factory import AsyncHttpClientFactory
 
 class MusicPlaybackService:
     def __init__(self, http_client_factory: AsyncHttpClientFactory):
-        self.client_factory = http_client_factory
+        self.client = http_client_factory.get("wiim")
 
     async def get_status(self):
-        # get status of playback service
-        pass
+        try:
+            response = await self.client.get(
+                "/httpapi.asp",
+                params={"command": "getStatusEx"},
+            )
+
+            return response.status_code
+        except Exception as e:
+            print("WIIM ERROR:", type(e).__name__, str(e))
+            raise
 
     async def play(self, track_url: str):
         # play the track with the playback service

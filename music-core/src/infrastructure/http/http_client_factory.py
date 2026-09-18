@@ -8,7 +8,7 @@ import httpx
 class ServerConfig:
     name: str
     base_url: str
-    timeout: float = 10.0
+    timeout: float = 3
     headers: dict[str, str] = field(default_factory=dict)
     verify_ssl: bool = True
     follow_redirects: bool = True
@@ -24,7 +24,7 @@ class AsyncHttpClientFactory:
     async def start(self) -> None:
         for name, config in self._servers.items():
             self._clients[name] = httpx.AsyncClient(
-                base_url=self._normalize_base_url(config.base_url),
+                base_url=config.base_url,
                 timeout=config.timeout,
                 headers=httpx.Headers(config.headers),
                 verify=config.verify_ssl,
@@ -49,7 +49,3 @@ class AsyncHttpClientFactory:
 
         for client in clients:
             await client.aclose()
-
-    @staticmethod
-    def _normalize_base_url(base_url: str) -> str:
-        return f"{base_url.rstrip('/')}/"

@@ -9,15 +9,25 @@ class MusicSearchService:
     """
 
     def __init__(self, client_factory: AsyncHttpClientFactory):
-        self.client_factory = client_factory
+        self.client = client_factory.get("dlna")
 
     async def get_status(self):
-        client = self.client_factory.get("dlna")
+        try:
+            request = self.client.build_request("GET", "/rootDesc.xml")
 
-        response = await client.get("/rootDesc.xml")
+            print("REQUEST URL:", request.url)
+            print("REQUEST HEADERS:", request.headers)
 
-        # self.client_factory.
-        return response.status_code
+            response = await self.client.send(request)
+
+            print("STATUS:", response.status_code)
+            return response.status_code
+
+        except Exception as e:
+            print("ERROR TYPE:", type(e).__name__)
+            print("ERROR REPR:", repr(e))
+            print("ERROR CAUSE:", repr(e.__cause__))
+            raise
 
     async def search(self, query: str) -> str:
         # search for music with the search service

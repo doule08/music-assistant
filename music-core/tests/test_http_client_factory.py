@@ -1,10 +1,10 @@
 import httpx
 
-from src.infrastructure.http.client_factory import HttpClientFactory, ServerConfig
+from infrastructure.http.http_client_factory import AsyncHttpClientFactory, ServerConfig
 
 
 def test_factory_returns_configured_httpx_client():
-    factory = HttpClientFactory(
+    factory = AsyncHttpClientFactory(
         {
             "music-api": ServerConfig(
                 name="music-api",
@@ -29,7 +29,7 @@ def test_factory_returns_configured_httpx_client():
 
 
 def test_factory_raises_when_server_is_unknown():
-    factory = HttpClientFactory()
+    factory = AsyncHttpClientFactory()
 
     try:
         factory.get("missing-server")

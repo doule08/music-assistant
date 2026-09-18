@@ -1,11 +1,8 @@
 from fastapi import APIRouter, Depends
-from application.music.music_service import MusicService, create_music_client_factory
+from application.music.music_service import MusicService
+from application.music.music_dependencies import get_music_service
 
 router = APIRouter(tags=["Playback control"], prefix="/music")
-
-
-def get_music_service() -> MusicService:
-    return MusicService(create_music_client_factory())
 
 
 @router.get("/status")

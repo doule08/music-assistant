@@ -1,3 +1,3 @@
-from .client_factory import AsyncHttpClientFactory, HttpClientFactory, ServerConfig
+from .http_client_factory import AsyncHttpClientFactory, ServerConfig
 
-__all__ = ["ServerConfig", "HttpClientFactory", "AsyncHttpClientFactory"]
+__all__ = ["ServerConfig", "AsyncHttpClientFactory"]

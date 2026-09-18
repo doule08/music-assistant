@@ -1,40 +1,50 @@
-from __future__ import annotations
-
-from infrastructure.http.client_factory import AsyncHttpClientFactory, ServerConfig
-
-
-def create_music_client_factory() -> AsyncHttpClientFactory:
-    return AsyncHttpClientFactory(
-        {
-            "music-server": ServerConfig(
-                name="music-server",
-                base_url="http://localhost:8000",
-                timeout=10.0,
-                headers={"Accept": "application/json"},
-            )
-        }
-    )
+from application.music.music_playback_service import MusicPlaybackService
+from application.music.music_search_service import MusicSearchService
+from infrastructure.http.http_client_factory import AsyncHttpClientFactory, ServerConfig
 
 
 class MusicService:
-    def __init__(self, client_factory: AsyncHttpClientFactory):
-        self.client_factory = client_factory
+
+    # TODO : Will need two service :
+    # 1 One to search the music with a mini DLNA server (later with a navidrome server)
+    # 2 One to control the playback with my Wiim AMp Pro
+
+    def __init__(
+        self, search_service: MusicSearchService, playback_service: MusicPlaybackService
+    ):
+        self.search_service = search_service
+        self.playback_service = playback_service
+        pass
 
     # TODO
     async def get_status(self):
-        async with self.client_factory.get("music-server") as client:
-            response = await client.get("/status")
-            response.raise_for_status()
-            return response.json()
+        # get status of search service and playback service
+        pass
 
     async def play(self, track_id: str):
-        async with self.client_factory.get("music-server") as client:
-            response = await client.post("/player/play", json={"track_id": track_id})
-            response.raise_for_status()
-            return response.json()
+        # search for the track with the search service and play it with the playback service
+        pass
 
     async def pause(self):
-        async with self.client_factory.get("music-server") as client:
-            response = await client.post("/player/pause")
-            response.raise_for_status()
-            return response.json()
+        # pause the playback service
+        pass
+
+    async def resume(self):
+        # resume the playback service
+        pass
+
+    async def stop(self):
+        # stop the playback service
+        pass
+
+    async def next(self):
+        # play the next track with the playback service
+        pass
+
+    async def previous(self):
+        # play the previous track with the playback service
+        pass
+
+    async def set_volume(self, volume: int):
+        # set the volume of the playback service
+        pass

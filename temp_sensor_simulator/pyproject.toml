@@ -1,0 +1,20 @@
+[project]
+name = "temp-sensor-simulator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "meryl", email = "meryloudev@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "paho-mqtt>=2.1.0",
+    "python-dotenv>=1.2.3",
+]
+
+[project.scripts]
+temp-sensor-simulator = "temp_sensor_simulator:main"
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"

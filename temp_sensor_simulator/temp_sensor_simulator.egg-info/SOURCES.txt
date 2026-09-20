@@ -1,8 +1,0 @@
-README.md
-main.py
-pyproject.toml
-temp_sensor_simulator.egg-info/PKG-INFO
-temp_sensor_simulator.egg-info/SOURCES.txt
-temp_sensor_simulator.egg-info/dependency_links.txt
-temp_sensor_simulator.egg-info/requires.txt
-temp_sensor_simulator.egg-info/top_level.txt

@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "fastapi[standard]>=0.141.1",
+    "paho-mqtt>=2.1.0",
     "psycopg[binary]>=3.3.5",
     "python-dotenv>=1.2.3",
     "sqlalchemy>=2.0.52",
@@ -24,3 +25,7 @@ package = false
 dev = [
     "pytest>=9.1.1",
 ]
+
+
+[tool.uv.extra-build-dependencies]
+temp-sensor-simulator = ["setuptools"]

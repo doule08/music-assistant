@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     navidrome_url: str
     wiim_url: str
 
+    mqtt_host: str
+    mqtt_port: int
+    mock_topic: str
+
     model_config = SettingsConfigDict(env_file=env_path, env_file_encoding="utf-8")
 
 

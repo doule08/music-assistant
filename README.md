@@ -16,6 +16,10 @@ http://SERVER-URL:8200/ContentDir.xml
 
 http://SERVER-URL:8200/ctl/ContentDir
 
+## paho-mqtt doc
+
+https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
+
 # Commands
 
 ## Launch script
@@ -25,4 +29,3 @@ http://SERVER-URL:8200/ctl/ContentDir
 ## Run tests
 
      uv run pytest -q
-

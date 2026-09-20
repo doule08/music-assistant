@@ -4,6 +4,7 @@ import uvicorn
 
 from api.music_controller import router as music_router
 from infrastructure.http.clients import create_http_client_factory
+from infrastructure.mqtt.mqtt_subscriber import MqttSubscriber
 
 
 @asynccontextmanager
@@ -35,3 +36,7 @@ async def root():
 if __name__ == "__main__":
     # Reload is set to True for development purposes; set it to False in production
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+    subscriber = MqttSubscriber()
+
+    subscriber.start()

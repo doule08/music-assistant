@@ -10,16 +10,20 @@ from infrastructure.mqtt.mqtt_subscriber import MqttSubscriber
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     http_client_factory = create_http_client_factory()
+    mqtt_subscriber = MqttSubscriber()
 
     await http_client_factory.start()
+    mqtt_subscriber.start()
 
     # Store the http_client_factory in the app state so it can be accessed in the dependencies
     app.state.http_client_factory = http_client_factory
+    app.state.mqtt_subscriber = mqtt_subscriber
 
     try:
         # Yield control back to the FastAPI application to handle requests
         yield
     finally:
+        mqtt_subscriber.stop()
         await http_client_factory.close()
 
 
@@ -34,9 +38,5 @@ async def root():
 
 
 if __name__ == "__main__":
-    # Reload is set to True for development purposes; set it to False in production
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-
-    subscriber = MqttSubscriber()
-
-    subscriber.start()
+    # Keep reload disabled while using MQTT in development; the reloader creates duplicate clients and reconnect loops.
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)

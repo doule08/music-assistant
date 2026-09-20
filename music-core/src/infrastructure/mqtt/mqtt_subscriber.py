@@ -11,6 +11,7 @@ class MqttSubscriber:
     def __init__(self, host=settings.mqtt_host, port=settings.mqtt_port) -> None:
         self.host = host
         self.port = port
+        self._started = False
 
         self.client = mqtt.Client(CallbackAPIVersion.VERSION2, client_id=self.CLIENT_ID)
 
@@ -18,11 +19,31 @@ class MqttSubscriber:
         self.client.on_message = self.on_message
 
     def start(self):
-        self.client.connect(self.host, self.port)
-        print("Connecting to MQTT broker...")
-        self.client.loop_forever()
+        if self._started:
+            return
 
-    def on_connect(self, client: mqtt.Client, userdata, flags, reason_code):
+        print("Connecting to MQTT broker...")
+        self.client.connect(self.host, self.port)
+        self.client.loop_start()
+        self._started = True
+
+    def stop(self):
+        if not self._started:
+            return
+
+        self.client.loop_stop()
+        self.client.disconnect()
+        self._started = False
+        print("Disconnected from MQTT broker.")
+
+    def on_connect(
+        self,
+        client: mqtt.Client,
+        userdata,
+        flags,
+        reason_code,
+        properties=None,
+    ):
         # reason_code = ??
         print(f"Connected to MQTT broker : {reason_code}")
         client.subscribe(self.TOPIC, qos=1)

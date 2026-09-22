@@ -51,7 +51,7 @@ def main():
             payload = json.dumps(
                 {
                     "device_id": DEVICE_ID,
-                    "value": random.randrange(1, 100),
+                    "value": "Rolling stones",
                     "timestamp": time.time(),
                 }
             )

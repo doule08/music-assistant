@@ -20,6 +20,16 @@ http://SERVER-URL:8200/ctl/ContentDir
 
 https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
 
+## STT: whisper.cpp
+
+https://github.com/ggml-org/whisper.cpp/blob/master/README.md?plain=1
+
+## Wake Word: openWakeWord
+
+https://github.com/dscripka/openWakeWord
+
+---
+
 # Commands
 
 ## Launch script
